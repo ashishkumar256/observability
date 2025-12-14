@@ -1,0 +1,59 @@
+{{- if eq .Values.volume.type "hostPath" }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "elasticsearch.fullname" . }}-host-setup
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "elasticsearch.labels" . | nindent 4 }}
+    app: elasticsearch-setup
+  annotations:
+    # --- HELM HOOK ANNOTATIONS ---
+    # This runs the Job before install and before any upgrade.
+    "helm.sh/hook": pre-install,pre-upgrade
+    # Ensures the Job is cleaned up after success and before the next run.
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    # -----------------------------
+spec:
+  template:
+    spec:
+      # Allows access to the host's filesystem and processes (required for hostPath setup)
+      hostPID: true 
+      restartPolicy: OnFailure
+      containers:
+      - name: setup-host-volume
+        image: {{ .Values.elasticsearch.image }}:{{ .Values.elasticsearch.tag }}
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/sh
+        - -c
+        # The multi-line shell command to execute the required host operations
+        - |
+          chown -R {{ .Values.volume.runAsUser }}:{{ .Values.volume.runAsGroup }} {{ .Values.volume.mountPath }}
+          chmod -R 700  {{ .Values.volume.mountPath }}
+        securityContext:
+          # Required to perform host-level file system operations
+          runAsUser: 0 
+          privileged: true 
+        volumeMounts:
+          # Mount the host's root directory to allow the container to access any host path
+        - name: es-data
+          mountPath: {{ .Values.volume.mountPath }}
+      volumes:
+      - name: es-data
+        hostPath:
+          path: {{ .Values.volume.hostPath }}
+          type: DirectoryOrCreate
+---
+# Helper definition for cleanup and checking hook success
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "elasticsearch.fullname" . }}-host-setup-hook-success
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": hook-succeeded
+data:
+  status: "success"
+{{- end }}

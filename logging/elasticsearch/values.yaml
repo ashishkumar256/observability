@@ -1,0 +1,10 @@
+elasticsearch:
+  image: elasticsearch
+  tag: 7.17.28
+
+volume:
+  type: hostPath
+  runAsUser: 1000
+  runAsGroup: 1000  
+  hostpath: /mnt/esdata
+  mountPath: /usr/share/elasticsearch/data

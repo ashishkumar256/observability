@@ -1,0 +1,11 @@
+apiVersion: v2
+name: elasticsearch
+description: A Helm chart for deploying a single-node Elasticsearch instance with hostPath setup capability.
+type: application
+version: 0.0.1
+appVersion: "7.17.28"
+
+# Optional: You can define maintainers, sources, and dependencies here.
+# maintainers:
+#   - name: Your Name
+#     email: your.email@example.com

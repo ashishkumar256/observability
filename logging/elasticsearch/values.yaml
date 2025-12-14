@@ -6,5 +6,5 @@ volume:
   type: hostPath
   runAsUser: 1000
   runAsGroup: 1000  
-  hostpath: /mnt/esdata
+  hostPath: /mnt/esdata
   mountPath: /usr/share/elasticsearch/data
